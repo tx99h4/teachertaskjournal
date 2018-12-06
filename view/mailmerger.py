@@ -10,23 +10,23 @@ def create_tsk_journal(datasrc: str, template: str, output: str, **kwargs):
         e.filename = datasrc
         e.strerror = 'ملف بيانات المذكرة غير موجود'
         return e
-	
+
     if 'weekrange' in kwargs:
         filter = str(kwargs['weekrange'][0]) + '<= weeknum <= ' + str(kwargs['weekrange'][1])
         weekplan = data.query(filter)
     else:
         weekplan = data
-		
+
     fields = weekplan.to_dict('records')
     document = MailMerge(template)
     document.merge_pages(fields)
     document.write(output)
-	
+
     # for windows only systems
     # is like double clicking on the file
     if 'openit' in kwargs and kwargs['openit']:
         os.startfile(output)
-	
+
 
 template = 'TASKBOARDFORM.docx'
 output = 'المذكرة اليومية.docx'
