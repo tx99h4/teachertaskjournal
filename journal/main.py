@@ -26,6 +26,8 @@ dfy = [ fill_year_timetable(df, timetable), fill_year_timetable(df, tmtclass) ]
 
 for i in course.index:
    crs = course.iloc[i]
+   # if crs[3] contains X+Y -> create repart df = x + Y
+   # if crs[3] contains X+Y -> create repart df = x + Y
    repart = read_csv(crs[2] + '.csv')
    dsfy = fill_year_course_content(crs, repart, dfy)
 
