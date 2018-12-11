@@ -1,5 +1,6 @@
 from populatetables import fill_school_dates, fill_year_timetable, fill_year_course_content
-from pandas import read_csv
+from utils import prefix_columns_from
+from pandas import read_csv, concat
 import csv
 
 import timeit, math
@@ -15,7 +16,9 @@ tmtclass  = read_csv('conf/tmclasses.csv')
 course    = read_csv('conf/courses.csv')
 
 df  = fill_school_dates(startdate, enddate, vacation_dates)
-dfy = [ fill_year_timetable(df, timetable), fill_year_timetable(df, tmtclass) ]
+dfcrs = fill_year_timetable(df, timetable)
+dfgrp = fill_year_timetable(df, tmtclass)
+dfy = [ dfcrs.copy(), dfgrp.copy()]
 
 # print(dfz.head(3))
 # z = len(dfz.index)
@@ -31,14 +34,17 @@ for i in course.index:
    repart = read_csv(crs[2] + '.csv')
    dsfy = fill_year_course_content(crs, repart, dfy)
 
-   
-dsfy.to_csv('df.csv', index=False,
+prefix = 'crs_'
+idxcol = 2
+
+dfcrs.columns = prefix_columns_from(idxcol, dfcrs, prefix)
+dfc = concat([dsfy, dfcrs], axis=1)
+
+dfc.to_csv('df.csv', index=False,
                      quotechar='"', quoting=csv.QUOTE_ALL, 
                         na_rep=' ', encoding='utf-8-sig')
 
-
-
-
+# print( dfc.head(2) )
 # from pathlib import Path
 # Path.cwd()
 

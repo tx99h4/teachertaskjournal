@@ -32,7 +32,9 @@ template = 'TASKBOARDFORM.docx'
 output = 'المذكرة اليومية.docx'
 datasrc = '../journal/df.csv'
 
-e = create_tsk_journal(datasrc, template, output, openit=True, weekrange=(10, 10)) 
+k = 11
+weekrng= (k, k)
+e = create_tsk_journal(datasrc, template, output, openit=True) 
 
 # works of any plateform
 # import subprocess

@@ -19,10 +19,9 @@ def fill_school_dates(startdate, enddate: list, vacation_dates: list, is_saturda
     return df
 
 def fill_year_timetable(schooldates: DataFrame, timetable: DataFrame) -> DataFrame:
-    df = merge(schooldates, timetable, on=schooldates.columns[1], how='left')
+    df = merge(schooldates, timetable, on=schooldates.columns[1], how='left').fillna(value=' ')
     df.drop(df.columns[1], axis=1, inplace=True) # delete column 'day'
     df = df.reindex(df.index.rename('id'))
-	
     return df
 	
 	
@@ -30,13 +29,14 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
     columnoffset = 2 # explain why is this
     weekcolumn = 0
     
-    dfz = yeartimetable[0]
+    df = {'lessons': yeartimetable[0],
+          'group'  : yeartimetable[1] }
 
     findfunc = lambda x: x.str.contains(course[0], na=False)
 
     # check if the lesson is in the subset of the courses' list
-    coursename = yeartimetable[0].iloc[:, columnoffset:].apply(findfunc)
-    classgroup = yeartimetable[1].iloc[:, columnoffset:].values == course[3] # <- can be: 3+4, 5+6
+    coursename = df['lessons'].iloc[:, columnoffset:].apply(findfunc)
+    classgroup = df['group'].iloc[:, columnoffset:].values == course[3] # <- can be: 3+4, 5+6
 
     criterion = [coursename, classgroup]
 
@@ -54,31 +54,31 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
     for cell in lessons:
         
         cellcolumn = cell[1] + columnoffset
-        weeknum = dfz.iloc[cell[0], weekcolumn]
-        courselocation = dfz.iloc[cell[0], cellcolumn]
+        weeknum = df['lessons'].iloc[cell[0], weekcolumn]
+        courselocation = df['lessons'].iloc[cell[0], cellcolumn]
 
         if weeknum > 35:
             break
 
-        # move to next column if weeknum is unchanged
-        ## move to next column if nb of lesson_col > 1: lessoncolumn++
+        # get the next session in a week
         if weeknum == prevweeknum:
             sessioncount = sessioncount + 1
-            if course[0] == 'تربية إسلامية':
+            if course[0] == 'تربية إسلامية': # content of col 1 then 2 every week
                 lessoncolumn = lessoncolumn + 1 if lessoncolumn <2 else 1
-            if course[0] == 'اجتماعيات':
+            if course[0] == 'اجتماعيات':  # content of col 1 then 2 every week
                 lessoncolumn = lessoncolumn + 1 if lessoncolumn <3 else 1
-            if course[0] == 'قراءة':
-                if course[3] == '3+4':
+            if course[0] == 'قراءة': 
+                if course[3] == '3+4': # content of col 1 3x then 2 then 3 every week
                     lessoncolumn = lessoncolumn + 1 if sessioncount >3 else 1
-                if course[3] == '5+6':
+                if course[3] == '5+6': # content of col 1 2x then 2 every week
                     lessoncolumn = lessoncolumn + 1 if sessioncount >3 and lessoncolumn <2 else lessoncolumn
         else:
             sessioncount = 1
             lessoncolumn = course[1]
+			
         prevweeknum = weeknum
         
         coursecontent = courserepartition.iloc[weeknum - 1, lessoncolumn]
-        dfz.iat[cell[0], cellcolumn] = courselocation.replace(course[0], course[0] + ' : ' + str(coursecontent))
+        df['lessons'].iat[cell[0], cellcolumn] = courselocation.replace(course[0], str(coursecontent))
 
-    return dfz
+    return df['lessons']
