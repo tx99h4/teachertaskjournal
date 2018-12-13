@@ -28,13 +28,17 @@ def create_tsk_journal(datasrc: str, template: str, output: str, **kwargs):
         os.startfile(output)
 
 
-template = 'TASKBOARDFORM.docx'
-output = 'المذكرة اليومية.docx'
-datasrc = '../journal/df.csv'
 
-k = 11
-weekrng= (k, k)
-e = create_tsk_journal(datasrc, template, output, openit=True) 
+if __name__ == "__main__":
+    template = 'TASKBOARDFORM.docx'
+    output = 'المذكرة اليومية.docx'
+    datasrc = 'df.csv'
+    k = 11
+    weekrng= (k, k+3)
+    import sys
+    sys.path.insert(0, '../journal')
+    import main
+    e = create_tsk_journal(datasrc, template, output, openit=True, weekrange=weekrng) 
 
 # works of any plateform
 # import subprocess
