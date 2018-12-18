@@ -27,7 +27,6 @@ def fill_year_timetable(schooldates: DataFrame, timetable: DataFrame) -> DataFra
 	
 	
 def fill_year_course_content(course: list, courserepartition: DataFrame, yeartimetable: DataFrame) -> DataFrame:
-    columnoffset = 2 # explain why is this
     weekcolumn = 0
     
     df = {'lessons': yeartimetable[0],
@@ -36,7 +35,7 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
           'card'   : yeartimetable[3]}
 
 
-    lessons = find_group_course(course, df, columnoffset)
+    lessons = find_group_course(course, df, 2)
     
     # lessoncolumn = 1
     
@@ -50,7 +49,7 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
     for cell in lessons:
         day = cell[0]
         weeknum = df['lessons'].iloc[day, weekcolumn]
-        period = cell[1] + columnoffset
+        period = cell[1]
 
         if weeknum >= 34:
             return
@@ -61,12 +60,12 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
 
         # get the next session in a week
         if weeknum == prev['weeknum']:
-            if course[0] == 'تربية إسلامية' or course[0] == 'اجتماعيات': # content of col 1 then 2 every week
+            if course[0] == 'تربية إسلامية' or course[0] == 'اجتماعيات': # content of col 1 then 2 every week (march beat)
                 lessoncolumn = lessoncolumn + 1 if lessoncolumn <2 else 1
                 # breakpoint()
             if course[0] == 'قراءة':
                 if course[3] == '3+4': # content of col 1 3x then 2 then 3 every week (common time beat)
-                    lessoncolumn = lessoncolumn + 1 if 3< count['session'] <=5 else 1
+                    lessoncolumn = lessoncolumn + 1 if 2< count['session'] <=4 else 1
                     # import pdb
                     # pdb.set_trace()
                     # pdb.set_trace = lambda: 1
@@ -76,7 +75,7 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
             count['session'] = 1
             lessoncolumn = course[1]
 
-        subject = courserepartition.iloc[weeknum - 1, lessoncolumn]
+        subject = courserepartition.iloc[weeknum, lessoncolumn] # weeknum-1 will include تقويم تشخيصي week
 
         if 'تشخيص' not in subject:
             if prev['course'] == subject:

@@ -12,7 +12,7 @@ if __name__ == "__main__":
 else:
     WIR = '../journal/'
 
-startdate = '2018-09-24'
+startdate = '2018-10-01'
 enddate = '2019-06-23'
 is_saturdayschool = False
 vacation_dates = [ ('2018-10-28', '2018-11-06'), ('2019-01-20', '2019-01-27'), ('2019-03-31', '2019-04-14') ]
@@ -52,9 +52,8 @@ dfcard.columns = prefix_columns_from(idxcol, dfcard, prefix['card'])
 
 dfc = concat([dfy[0], dfcrs, dfsess, dfcard], axis=1)
 
-dfc.to_csv('../view/df.csv', index=False,
-                     quotechar='"', quoting=csv.QUOTE_ALL, 
-                        na_rep=' ', encoding='utf-8-sig')
+dfc.replace(r'(.*)/(.*)', r'\1\n\2', regex=True, inplace=True)
+dfc.to_csv('../view/df.csv', index=False, na_rep=' ', encoding='utf-8-sig')
 
 # print( dfc.head(2) )
 # from pathlib import Path

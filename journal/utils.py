@@ -12,16 +12,17 @@ def prefix_columns_from(indexcol: int, df: DataFrame, prefix: str) -> list:
 
 # return coordinate (tuple) list of all matching
 # courses for a class group
-# colshift --> restrict search from the specified column#
-def find_group_course(course: list, dataset: DataFrame, colshift: int) -> list:
+# colshift --> restrict search from the specified column# (default: all)
+def find_group_course(course: list, dataset: DataFrame, colshift: int = 0) -> list:
     findfunc = lambda x: x.str.contains(course[0], na=False)
-	
+
     # check if the lesson is in the subset of the courses' list
     coursename = dataset['lessons'].iloc[:, colshift:].apply(findfunc)
-	
+
     # mask all non matching group of the criterion
     classgroup = dataset['group'].iloc[:, colshift:].values == course[3] # <- can be: 3+4, 5+6
     criterion = [coursename, classgroup]
-	
-    return zip(*np.where(criterion[0] & criterion[1]))
+
+    result = np.where(criterion[0] & criterion[1])
+    return zip(result[0], result[1] + colshift)
 
