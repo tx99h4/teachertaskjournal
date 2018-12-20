@@ -81,13 +81,13 @@ def generate_school_all_holidays(civilyear: int, vacations: list) -> list:
 	
     return allholidays
 	
-def generate_school_dates(datebegin: str, dateend: str, vacations: list, is_saturday_included=False) -> list:
-    civilyear = int(datebegin.partition('-')[0])
+def generate_school_dates(daterange: tuple, vacations: list, is_saturday_included=False) -> list:
+    civilyear = int(daterange[0].partition('-')[0])
     schoolholidays = generate_school_all_holidays(civilyear, vacations)
 
     # generate the working school days after
     # removing holidays and weekends
     bdays = CustomBusinessDay(holidays=schoolholidays, weekmask=school_days(is_saturday_included))
-    workingdays = date_range(datebegin, dateend, tz='Africa/Casablanca', freq=bdays)
+    workingdays = date_range(daterange[0], daterange[1], tz='Africa/Casablanca', freq=bdays)
 	
     return workingdays

@@ -12,8 +12,7 @@ if __name__ == "__main__":
 else:
     WIR = '../journal/'
 
-startdate = '2018-10-01'
-enddate = '2019-06-23'
+daterange = ('2018-10-01', '2019-06-23')
 is_saturdayschool = False
 vacation_dates = [ ('2018-10-28', '2018-11-06'), ('2019-01-20', '2019-01-27'), ('2019-03-31', '2019-04-14') ]
 
@@ -21,7 +20,7 @@ timetable = read_csv(WIR + 'conf/tmmawad.csv')
 tmtclass  = read_csv(WIR + 'conf/tmclasses.csv')
 course    = read_csv(WIR + 'conf/courses.csv')
 
-df  = fill_school_dates(startdate, enddate, vacation_dates)
+df  = fill_school_dates(daterange, vacation_dates)
 dfgrp = fill_year_timetable(df, tmtclass)
 dfcrs = fill_year_timetable(df, timetable)
 dfsess = dfcrs.copy()

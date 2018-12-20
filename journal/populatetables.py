@@ -1,18 +1,18 @@
 from dategen import generate_school_dates, generate_school_weeks
-from utils import find_group_course
+from utils import find_group_course, next_lesson_column
 from ummalqura.hijri_date import HijriDate
 from pandas import DataFrame, merge
 
 
-def fill_school_dates(startdate, enddate: list, vacation_dates: list, is_saturdayschool=False) -> DataFrame:
-    schooldates = generate_school_dates(startdate, enddate, vacation_dates, is_saturdayschool)
-    schooldays     = list(map(int, schooldates.strftime('%w')))
-    schooldaynames = list(map(lambda x: HijriDate.day_dict[x], schooldates.day_name()))
-    schoolweeks = generate_school_weeks(schooldates)
+def fill_school_dates(daterange: tuple, vacation_dates: list, is_saturdayschool=False) -> DataFrame:
+    dates = generate_school_dates(daterange, vacation_dates, is_saturdayschool)
+    days  = list(map(int, dates.strftime('%w')))
+    daynames = list(map(lambda x: HijriDate.day_dict[x], dates.day_name()))
+    weeks = generate_school_weeks(dates)
 
-    df = DataFrame({'weeknum': schoolweeks,
-                    'day' : schooldays,
-                    'schooldate': schooldaynames + schooldates.strftime(' %d.%m.%Y')})
+    df = DataFrame({'weeknum': weeks,
+                    'day' : days,
+                    'schooldate': daynames + dates.strftime(' %d.%m.%Y')})
 
     df = df.reindex(df.index.rename('id'))
 	
@@ -28,7 +28,8 @@ def fill_year_timetable(schooldates: DataFrame, timetable: DataFrame) -> DataFra
 	
 def fill_year_course_content(course: list, courserepartition: DataFrame, yeartimetable: DataFrame) -> DataFrame:
     weekcolumn = 0
-    
+    prev  = { 'weeknum': -1, 'course': '', 'bigtxt': '' }
+    count = { 'session': 0, 'bigtxtsession': 0, 'card': 0 }    
     df = {'lessons': yeartimetable[0],
           'group'  : yeartimetable[1],
           'session': yeartimetable[2],
@@ -36,16 +37,10 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
 
 
     lessons = find_group_course(course, df, 2)
-    
-    # lessoncolumn = 1
+    lessoncolumn = course[1]
     
     # loop through the course and replace it with its content
     # from the repartition table
-    prev  = { 'weeknum': -1, 'course': '', 'bigtxt': '' }
-    count = { 'session': 0, 'bigtxtsession': 0, 'card': 0 }
-
-    # lessoncolumn = course[1]
-
     for cell in lessons:
         day = cell[0]
         weeknum = df['lessons'].iloc[day, weekcolumn]
@@ -58,25 +53,10 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
         session = df['session'].iloc[day, period]
         card = df['card'].iloc[day, period]
 
-        # get the next session in a week
-        if weeknum == prev['weeknum']:
-            if course[0] == 'تربية إسلامية' or course[0] == 'اجتماعيات': # content of col 1 then 2 every week (march beat)
-                lessoncolumn = lessoncolumn + 1 if lessoncolumn <2 else 1
-                # breakpoint()
-            if course[0] == 'قراءة':
-                if course[3] == '3+4': # content of col 1 3x then 2 then 3 every week (common time beat)
-                    lessoncolumn = lessoncolumn + 1 if 2< count['session'] <=4 else 1
-                    # import pdb
-                    # pdb.set_trace()
-                    # pdb.set_trace = lambda: 1
-                if course[3] == '5+6': # content of col 1 2x then 2 every week (walz beat)
-                    lessoncolumn = lessoncolumn + 1 if 2< count['session'] <=3 else 1
-        else:
-            count['session'] = 1
-            lessoncolumn = course[1]
-
+        lessoncolumn = next_lesson_column(lessoncolumn, course[1], weeknum, prev['weeknum'], course[3], course[0], count['session'])
         subject = courserepartition.iloc[weeknum, lessoncolumn] # weeknum-1 will include تقويم تشخيصي week
 
+        # get the next session in a week
         if 'تشخيص' not in subject:
             if prev['course'] == subject:
                 count['session'] = count['session'] + 1
@@ -85,11 +65,9 @@ def fill_year_course_content(course: list, courserepartition: DataFrame, yeartim
                 count['bigtxtsession'] = count['bigtxtsession'] + 1
                 sessioncounter = count['bigtxtsession']
             else:
-                sessioncounter = count['session']
+                count['session'] = 1 if weeknum != prev['weeknum'] else count['session']
                 count['card'] = count['card'] + 1
-        else:
-            sessioncounter = 1
-            count['card'] = 1
+                sessioncounter = count['session']
 
         df['lessons'].iat[day, period] = coursename.replace(course[0], subject)
         df['session'].iat[day, period] = session.replace(course[0], str(sessioncounter))
